@@ -1,3 +1,4 @@
+const socket = io();
 
 const loginForm = document.querySelector('#welcome-form');
 const messagesSection = document.querySelector('#messages-section');
@@ -9,12 +10,14 @@ const messageContentInput = document.querySelector('#message-content');
 
 let userName = '';
 
+
 loginForm.addEventListener('submit', function login(e) {
   e.preventDefault();
   if (userNameInput.value.length > 0) {
     userName = userNameInput.value;
     loginForm.classList.remove('show');
     messagesSection.classList.add('show')
+    socket.emit('user', { author: userName })
   } else {
     alert('Wrong! Please fill the name first!')
   }
@@ -25,6 +28,7 @@ addMessagForm.addEventListener('submit', function sendMessage(e) {
   e.preventDefault();
   if (messageContentInput.value.length > 0) {
     addMessage(userName, messageContentInput.value)
+    socket.emit('message', { author: userName, content: messageContentInput.value })
     messageContentInput.value = '';
   } else {
     alert('Wrong! Please type message first!')
@@ -35,9 +39,11 @@ addMessagForm.addEventListener('submit', function sendMessage(e) {
 const addMessage = (author, content) => {
   const message = document.createElement('li');
   message.classList.add('message')
-  message.classList.add('message--recived')
+  message.classList.add('message--received')
   if (author === userName) {
     message.classList.add('message--self')
+  } else if (author === 'ChatBot') {
+    message.classList.add('message--bot')
   }
   message.innerHTML = `
   <h3 class="message__author">${userName === author ? 'You' : author}</h3>
@@ -47,4 +53,6 @@ const addMessage = (author, content) => {
 `;
   messagesList.appendChild(message);
 }
+
+socket.on('message', ({ author, content }) => addMessage(author, content))
 
